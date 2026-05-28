@@ -53,6 +53,11 @@ if command -v pnpm &> /dev/null; then
   source <(pnpm completion zsh)
 fi
 
+# direnv
+if command -v direnv &> /dev/null; then
+  eval "$(direnv hook zsh)"
+fi
+
 # Starship
 # https://starship.rs
 export STARSHIP_CONFIG=${STARSHIP_CONFIG:-$ZDOTDIR/starship.toml}
