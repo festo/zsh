@@ -13,6 +13,39 @@ fi
 source ${ANTIDOTE_DIR:-/usr/share/zsh-antidote}/antidote.zsh
 antidote load
 
+# History search
+# Must come after `antidote load`: it overrides the zephyr editor plugin's Up/Down
+# and needs zsh-history-substring-search's widgets to already exist.
+#
+#   Up/Down       prefix match  - entries STARTING with what you typed
+#   Ctrl+Up/Down  substring match - entries CONTAINING what you typed
+autoload -Uz up-line-or-beginning-search down-line-or-beginning-search
+zle -N up-line-or-beginning-search
+zle -N down-line-or-beginning-search
+
+# Bind the normal (^[[A) and application (^[OA) cursor-key sequences so the
+# bindings hold regardless of whether the terminal is in keypad transmit mode.
+# Ctrl+arrow is ^[[1;5A on xterm/iTerm2, ^[[5A on rxvt.
+_bind_hist() {  # $1 = widget, $2... = key sequences
+  local widget=$1; shift
+  local seq keymap
+  for seq in "$@"; do
+    for keymap in main viins vicmd; do
+      bindkey -M $keymap "$seq" $widget
+    done
+  done
+}
+
+_bind_hist up-line-or-beginning-search   '^[[A' '^[OA'
+_bind_hist down-line-or-beginning-search '^[[B' '^[OB'
+
+if (( $+widgets[history-substring-search-up] )); then
+  _bind_hist history-substring-search-up   '^[[1;5A' '^[[5A' '^[O5A'
+  _bind_hist history-substring-search-down '^[[1;5B' '^[[5B' '^[O5B'
+fi
+
+unfunction _bind_hist
+
 # User binaries
 if [[ -d "$HOME/.local/bin" ]]; then
   export PATH=$HOME/.local/bin:$PATH
